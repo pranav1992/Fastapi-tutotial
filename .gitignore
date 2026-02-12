@@ -6,9 +6,7 @@ __pycache__/
 .Python
 env/
 # The virtual environment created by uv is typically named .venv
-.venv/ 
-app/
-test/
+.venv/
 # Other common venv names
 venv/
 venv-*
@@ -39,4 +37,5 @@ pytest.ini
 # FastAPI/Uvicorn specific
 # If you have a specific database file for development
 *.db 
+*.sqlite
 log.txt
