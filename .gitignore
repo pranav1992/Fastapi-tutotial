@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+.Python
+env/
+# The virtual environment created by uv is typically named .venv
+.venv/ 
+app/
+test/
+# Other common venv names
+venv/
+venv-*
+local/
+
+# Byte-code files
+*.py[cod]
+*.bin
+
+# IDE specific files
+.idea/
+.vscode/
+
+# uv lock file (optional, depends on workflow)
+# uv.lock
+
+# Documentation build files
+docs/_build/
+site/
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+coveragerc
+pytest.ini
+
+# FastAPI/Uvicorn specific
+# If you have a specific database file for development
+*.db 
+log.txt
