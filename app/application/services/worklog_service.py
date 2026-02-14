@@ -3,10 +3,11 @@ from typing import Optional
 from sqlalchemy.exc import IntegrityError
 
 from app.domain.exceptions import WorkLogAlreadyExists, WorkLogDateRequired
+from app.infrastructure.db.repositories.worklog_repo import WorkLogRepository
 
 
 class WorkLogService:
-    def __init__(self, repo):
+    def __init__(self, repo: WorkLogRepository):
         self.repo = repo
 
     def create_worklog(self, user_id, task_id,
@@ -21,3 +22,6 @@ class WorkLogService:
         except IntegrityError:
             self.repo.session.rollback()
             raise WorkLogAlreadyExists("Worklog already exists")
+
+    def get_worklog_for_month(self, user_id, task_id, year, month):
+        return self.repo.get_worklog(user_id, task_id, year, month)

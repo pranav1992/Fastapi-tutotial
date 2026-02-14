@@ -38,3 +38,13 @@ class WorkLogRepository:
         self.session.commit()
         self.session.refresh(worklog)
         return worklog
+
+    def get_worklog(self, user_id, task_id, year, month):
+        return self.session.exec(
+            select(WorkLog).where(
+                WorkLog.user_id == user_id,
+                WorkLog.task_id == task_id,
+                WorkLog.year == year,
+                WorkLog.month == month,
+            )
+        ).first()

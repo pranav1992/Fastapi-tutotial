@@ -1,7 +1,7 @@
-import pytest
+
 from fastapi.testclient import TestClient
 
-from app.application.worklog_service import WorkLogService
+from app.application.services.worklog_service import WorkLogService
 from app.domain.exceptions import WorkLogAlreadyExists
 from app.main import app
 from app.infrastructure.db.session import get_session

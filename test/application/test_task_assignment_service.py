@@ -3,7 +3,8 @@ from unittest.mock import Mock
 import pytest
 from sqlalchemy.exc import IntegrityError
 
-from app.application.task_assignment_service import TaskAssignmentService
+from app.application.services.task_assignment_service\
+                                            import TaskAssignmentService
 from app.domain.exceptions import InvalidTaskAssignment, TaskAlreadyAssigned
 
 
@@ -49,33 +50,4 @@ def test_create_task_assignment_duplicate():
 
     repo.session.rollback.assert_called_once()
 
-
-def test_create_worklog_success():
-    repo = Mock()
-    repo.create_worklog_for_month.return_value = "worklog"
-    service = TaskAssignmentService(repo)
-
-    result = service.create_worklog("user-id", "task-id")
-
-    assert result == "worklog"
-    repo.create_worklog_for_month.assert_called_once_with("user-id", "task-id", None)
-
-
-def test_create_worklog_missing_user():
-    repo = Mock()
-    service = TaskAssignmentService(repo)
-
-    with pytest.raises(InvalidTaskAssignment):
-        service.create_worklog("", "task-id")
-
-    repo.create_worklog_for_month.assert_not_called()
-
-
-def test_create_worklog_missing_task():
-    repo = Mock()
-    service = TaskAssignmentService(repo)
-
-    with pytest.raises(InvalidTaskAssignment):
-        service.create_worklog("user-id", None)
-
-    repo.create_worklog_for_month.assert_not_called()
+    repo.task_assignment_to_user.assert_called_once_with("user-id", "task-id")

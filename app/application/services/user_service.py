@@ -1,7 +1,7 @@
-from ..infrastructure.db.repositories.user_repo import UserRepository
-from ..domain.schema import UserData
+from app.infrastructure.db.repositories.user_repo import UserRepository
+from app.domain.schema import UserData
 from sqlalchemy.exc import IntegrityError
-from ..domain.exceptions import DuplicateEmployeeID, InvalidUserData
+from app.domain.exceptions import DuplicateEmployeeID, InvalidUserData
 
 
 class UserService:
@@ -19,3 +19,6 @@ class UserService:
         except IntegrityError:
             self.repo.session.rollback()
             raise DuplicateEmployeeID(user.employee_id)
+
+    def get_all_users(self):
+        return self.repo.get_all_users()

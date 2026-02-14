@@ -1,7 +1,7 @@
 
 def test_create_task_success(client):
     response = client.post(
-        "/tasks/",
+        "/tasks/create-task/",
         json={"name": "Pranav", "description": "101 102"}
     )
 
@@ -13,7 +13,7 @@ def test_create_task_success(client):
 
 def test_create_task_duplicate_name(client):
     response = client.post(
-        "/tasks/",
+        "/tasks/create-task/",
         json={"name": "Pranav", "description": "102"}
     )
     assert response.status_code == 409

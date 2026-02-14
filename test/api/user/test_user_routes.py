@@ -1,6 +1,6 @@
 def test_create_user_success(client):
     response = client.post(
-        "/users/",
+        "/users/create-user/",
         json={"name": "Pranav", "employee_id": "101"}
     )
 
@@ -10,12 +10,12 @@ def test_create_user_success(client):
 
 def test_create_user_duplicate_employee_id(client):
     client.post(
-        "/users/",
+        "/users/create-user/",
         json={"name": "Pranav", "employee_id": "102"}
     )
 
     response = client.post(
-        "/users/",
+        "/users/create-user/",
         json={"name": "Other", "employee_id": "102"}
     )
 

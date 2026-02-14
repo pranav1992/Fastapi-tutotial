@@ -1,12 +1,8 @@
 
 from sqlmodel import Session, select
-from uuid import UUID
-from typing import Union, Optional
-from datetime import date
 from app.domain.schema import TaskData
-from ..models import Task, TaskAssignment, WorkLog
+from ..models import Task
 from app.domain.exceptions import TaskNotFound
-from sqlmodel import select
 
 
 class TaskRepository:
@@ -32,17 +28,6 @@ class TaskRepository:
 
     def get_all_tasks(self):
         return self.session.exec(select(Task)).all()
-
-    def task_assignment_to_user(self, user_id: Union[UUID, str], task_id: Union[UUID, str]):
-        # Accept string UUIDs from callers and normalise to UUID objects for SQLModel
-        user_uuid = UUID(str(user_id))
-        task_uuid = UUID(str(task_id))
-
-        orm = TaskAssignment(user_id=user_uuid, task_id=task_uuid)
-        self.session.add(orm)
-        self.session.commit()
-        self.session.refresh(orm)
-        return orm
 
     # def create_worklog_for_month(
     #     self,

@@ -1,5 +1,5 @@
 from sqlalchemy.exc import IntegrityError
-from app.application.task_service import TaskService
+from app.application.services.task_service import TaskService
 from app.domain.schema import TaskData
 from app.domain.exceptions import DuplicateTaskName
 from unittest.mock import Mock

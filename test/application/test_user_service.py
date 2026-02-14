@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import Mock
 from sqlalchemy.exc import IntegrityError
 
-from app.application.user_service import UserService
+from app.application.services.user_service import UserService
 from app.domain.exceptions import DuplicateEmployeeID
 from app.domain.schema import UserData
 

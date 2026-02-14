@@ -1,5 +1,5 @@
 
-from sqlmodel import Session
+from sqlmodel import Session, select
 from app.domain.schema import UserData
 from ..models import User
 
@@ -18,3 +18,6 @@ class UserRepository:
         self.session.commit()
         self.session.refresh(orm)
         return orm
+
+    def get_all_users(self):
+        return self.session.exec(select(User)).all()

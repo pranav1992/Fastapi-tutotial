@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import pytest
 from sqlalchemy.exc import IntegrityError
 
-from app.application.worklog_service import WorkLogService
+from app.application.services.worklog_service import WorkLogService
 from app.domain.exceptions import WorkLogAlreadyExists, WorkLogDateRequired
 
 

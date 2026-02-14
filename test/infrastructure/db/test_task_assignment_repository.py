@@ -1,9 +1,8 @@
-from app.infrastructure.db.repositories.task_repo import \
-                                                TaskRepository
+from app.infrastructure.db.repositories.task_assignment_repo import TaskAssignmentRepository
 
 
 def test_task_assignment_create_success(session):
-    repo = TaskRepository(session)
+    repo = TaskAssignmentRepository(session)
 
     assignment = repo.task_assignment_to_user(
         user_id="11111111-1111-1111-1111-111111111111",

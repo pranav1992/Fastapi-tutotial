@@ -1,16 +1,19 @@
 from fastapi import APIRouter
-from ...domain.schema import TaskData, TaskResponse
+from app.domain.schema import TaskData, TaskResponse
 from sqlmodel import Session
 from fastapi import Depends
-from ...infrastructure.db.session import get_session
-from ...infrastructure.db.repositories.task_repo import TaskRepository
-from ...application.task_service import TaskService
-from app.application.task_assignment_service import TaskAssignmentService
+from app.infrastructure.db.session import get_session
+from app.infrastructure.db.repositories.task_repo import TaskRepository
+from app.infrastructure.db.repositories.task_assignment_repo\
+    import TaskAssignmentRepository
+from app.application.services.task_service import TaskService
+from app.application.services.task_assignment_service\
+                                        import TaskAssignmentService
 
 router = APIRouter(prefix="/tasks")
 
 
-@router.post("/")
+@router.post("/create-task/")
 async def create_tasks(task: TaskData, session: Session = Depends(
                                                         get_session)):
     repo = TaskRepository(session)
@@ -28,6 +31,6 @@ async def get_all_tasks(session: Session = Depends(get_session)):
 @router.post("/assign-task/")
 async def assign_task(user_id: str, task_id: str,
                       session: Session = Depends(get_session)):
-    repo = TaskRepository(session)
+    repo = TaskAssignmentRepository(session)
     service = TaskAssignmentService(repo)
     return service.create_task_assignment(user_id, task_id)

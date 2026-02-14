@@ -1,5 +1,4 @@
 from uuid import uuid4, UUID
-from datetime import date
 
 from sqlmodel import select
 
