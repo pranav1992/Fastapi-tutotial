@@ -39,3 +39,6 @@ class TaskAssignmentService:
                       task_id: Union[UUID, str]):
         """Return an active assignment for the user-task pair or ``None``."""
         return self.repo.get_assignment_for_user_task(user_id, task_id)
+
+    def get_all_task_assignments(self):
+        return self.repo.get_all_task_assignments()

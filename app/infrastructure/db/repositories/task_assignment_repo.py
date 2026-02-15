@@ -38,4 +38,8 @@ class TaskAssignmentRepository:
         if active_only:
             conditions.append(TaskAssignment.active.is_(True))
 
-        return self.session.exec(select(TaskAssignment).where(*conditions)).first()
+        return self.session.exec(select(TaskAssignment).
+                                 where(*conditions)).first()
+
+    def get_all_task_assignments(self):
+        return self.session.exec(select(TaskAssignment)).all()

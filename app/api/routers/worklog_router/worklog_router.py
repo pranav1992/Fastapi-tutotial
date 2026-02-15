@@ -17,3 +17,10 @@ async def create_worklog(worklog: WorkLogData,
     service = WorkLogService(repo)
     return service.create_worklog(worklog.user_id, worklog.task_id,
                                   worklog.target_date)
+
+
+@router.get("/get-all-worklogs/", response_model=list[WorkLogDataResponse])
+async def get_all_worklogs(session: Session = Depends(get_session)):
+    repo = WorkLogRepository(session)
+    service = WorkLogService(repo)
+    return service.get_all_worklogs()

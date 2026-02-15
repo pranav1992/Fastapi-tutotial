@@ -34,3 +34,10 @@ async def assign_task(user_id: str, task_id: str,
     repo = TaskAssignmentRepository(session)
     service = TaskAssignmentService(repo)
     return service.create_task_assignment(user_id, task_id)
+
+
+@router.get("/get-all-assigned-tasks/")
+async def get_all_assigned_tasks(session: Session = Depends(get_session)):
+    repo = TaskAssignmentRepository(session)
+    service = TaskAssignmentService(repo)
+    return service.get_all_task_assignments()

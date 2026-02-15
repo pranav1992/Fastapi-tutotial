@@ -77,7 +77,7 @@ class WorkLog(SQLModel, table=True):
     task_id: UUID = Field(foreign_key="task.id")
 
     year: int
-    month: int  # 1–12
+    month: int  
 
     created_at: date = Field(default_factory=date.today)
     active: bool = True
@@ -89,7 +89,7 @@ class TimeLog(SQLModel, table=True):
     # target, not a column object.
     task_id: UUID = Field(foreign_key="taskassignment.id")
     user_id: UUID = Field(foreign_key="user.id")
-    created_at: date = Field(default_factory=date.today)
+    created_at: Optional[date] = Field(default_factory=date.today)
     start_time: datetime
     end_time: datetime
     total_time: Optional[timedelta] = Field(default=None)

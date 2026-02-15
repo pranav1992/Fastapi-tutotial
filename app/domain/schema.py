@@ -32,6 +32,7 @@ class WorkLogDataResponse(BaseModel):
     task_id: UUID
     year: int
     month: int
+    created_at: date
 
 
 class WorkLogData(BaseModel):
@@ -45,10 +46,24 @@ class WorkLogRequest(BaseModel):
     target_date: Optional[date] = None
 
 
-class TimeLogData(BaseModel):
-    task_id: UUID 
+class TimeLogCreate(BaseModel):
+    task_id: UUID
     user_id: UUID
-    created_at: date = Field(default_factory=date.today)
     start_time: datetime
     end_time: datetime
-    total_time: Optional[timedelta] = Field(default=None)
+
+
+class TimeLogRead(BaseModel):
+    id: UUID
+    task_id: UUID
+    user_id: UUID
+    created_at: date
+    start_time: datetime
+    end_time: datetime
+    total_time: Optional[timedelta] = None
+
+    class Config:
+        orm_mode = True
+        json_encoders = {
+            timedelta: lambda td: int(td.total_seconds())
+        }

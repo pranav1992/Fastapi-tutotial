@@ -3,7 +3,7 @@ from app.application.services.task_assignment_service import\
 from app.application.services.time_log_service import TimeLogService
 from app.application.services.worklog_service import WorkLogService
 from app.domain.exceptions import TaskNotFound, WorkLogNotFound
-from app.domain.schema import TimeLogData
+from app.domain.schema import TimeLogCreate
 
 
 class TimeLogFacade:
@@ -34,18 +34,19 @@ class TimeLogFacade:
             raise WorkLogNotFound("Worklog not found")
         return worklog
 
-    def create_timelog(self, data: TimeLogData):
+    def create_timelog(self, data: TimeLogCreate):
         try:
-            assignment = self.check_task_assignment(data.user_id, data.task_id)
-            if not assignment:
-                return None
-            worklog = self.check_worklog(
-                data.user_id, data.task_id, data.year, data.month
-            )
-            if not worklog:
-                # create a worklog
-                self.worklog_service.create_worklog(
-                    data.user_id, data.task_id, data.target_date)
+            print(data)
+            # assignment = self.check_task_assignment(data.user_id, data.task_id)
+            # if not assignment:
+            #     return None
+            # worklog = self.check_worklog(
+            #     data.user_id, data.task_id, data.year, data.month
+            # )
+            # if not worklog:
+            #     # create a worklog
+            #     self.worklog_service.create_worklog(
+            #         data.user_id, data.task_id, data.created_at)
             timelog = self.timelog_service.create_time_log(data)
             return timelog
 
