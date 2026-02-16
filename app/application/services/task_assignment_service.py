@@ -2,6 +2,7 @@ from sqlalchemy.exc import IntegrityError
 from app.domain.exceptions import InvalidTaskAssignment, TaskAlreadyAssigned
 from app.infrastructure.db.repositories.task_assignment_repo import\
                                                     TaskAssignmentRepository
+from app.domain.schema import TaskAssignmentCreate
 from typing import Union
 from uuid import UUID
 
@@ -10,35 +11,37 @@ class TaskAssignmentService:
     def __init__(self, repo: TaskAssignmentRepository):
         self.repo = repo
 
-    def create_task_assignment(self, user_id, task_id):
-        # 1️ Validate input (business invariant)
-        if not user_id:
+    def create_task_assignment(self, data: TaskAssignmentCreate):
+        if not data.user_id:
             raise InvalidTaskAssignment("user_id is required")
 
-        if not task_id:
+        if not data.task_id:
             raise InvalidTaskAssignment("task_id is required")
 
-        # 2️ Try assignment
         try:
-            return self.repo.task_assignment_to_user(user_id, task_id)
+            return self.repo.create_task_assignment_to_user(data)
 
-        # 3️Translate DB constraint → domain error
         except IntegrityError:
             self.repo.session.rollback()
-            raise TaskAlreadyAssigned(user_id, task_id)
+            raise TaskAlreadyAssigned(str(data.user_id), str(data.task_id))
 
-        # 4️ Unexpected error
         except Exception as e:
             self.repo.session.rollback()
             raise e
 
-    def get_assigned_tasks_by_id(self, assigned_task_id: Union[UUID, str]):
-        return self.repo.get_assigned_tasks(assigned_task_id)
+    def get_task_assignment_by_id(self, assigned_task_id: Union[UUID, str]):
+        return self.repo.get_tasks_assigned_by_task_assignment_id(
+                                                        assigned_task_id)
 
-    def ensure_active(self, user_id: Union[UUID, str],
-                      task_id: Union[UUID, str]):
-        """Return an active assignment for the user-task pair or ``None``."""
-        return self.repo.get_assignment_for_user_task(user_id, task_id)
+    def ensure_task_assigned(self, user_id: Union[UUID, str],
+                             task_id: Union[UUID, str]):
+        return self.repo.ensure_task_assigned(user_id, task_id)
+
+    def get_task_assignments_by_user_id(self, user_id: Union[UUID, str]):
+        return self.repo.get_tasks_assigned_by_user_id(user_id)
+
+    def get_task_assignments_by_task_id(self, task_id: Union[UUID, str]):
+        return self.repo.get_tasks_assigned_by_task_id(task_id)
 
     def get_all_task_assignments(self):
-        return self.repo.get_all_task_assignments()
+        return self.repo.get_all_tasks_assigned()

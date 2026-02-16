@@ -29,14 +29,14 @@ def test_assign_task_success_and_duplicate(client):
     task_id = "44444444-4444-4444-4444-444444444444"
 
     first = client.post(
-        "/tasks/assign-task/",
-        params={"user_id": user_id, "task_id": task_id},
+        "/tasks/create-task-assignment/",
+        json={"user_id": user_id, "task_id": task_id}
     )
     assert first.status_code == 200
 
     duplicate = client.post(
-        "/tasks/assign-task/",
-        params={"user_id": user_id, "task_id": task_id},
+        "/tasks/create-task-assignment/",
+        json={"user_id": user_id, "task_id": task_id}
     )
     assert duplicate.status_code == 400
     message = duplicate.json()["message"]

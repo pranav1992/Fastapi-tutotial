@@ -37,7 +37,9 @@ class TimeLogFacade:
     def create_timelog(self, data: TimeLogCreate):
         try:
             print(data)
-            # assignment = self.check_task_assignment(data.user_id, data.task_id)
+
+            # assignment = self.check_task_assignment(
+            # data.user_id, data.task_id)
             # if not assignment:
             #     return None
             # worklog = self.check_worklog(
@@ -53,3 +55,6 @@ class TimeLogFacade:
         except Exception:
             self.session.rollback()
             raise
+
+    def get_all_timelogs(self):
+        return self.timelog_service.get_all_time_logs()

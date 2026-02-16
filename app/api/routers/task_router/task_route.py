@@ -1,5 +1,6 @@
 from fastapi import APIRouter
-from app.domain.schema import TaskData, TaskResponse
+from app.domain.schema import (
+    TaskData, TaskResponse, TaskAssignmentCreate, TaskAssignmentRead)
 from sqlmodel import Session
 from fastapi import Depends
 from app.infrastructure.db.session import get_session
@@ -28,15 +29,32 @@ async def get_all_tasks(session: Session = Depends(get_session)):
     return service.get_all_tasks()
 
 
-@router.post("/assign-task/")
-async def assign_task(user_id: str, task_id: str,
+@router.post("/create-task-assignment/", response_model=TaskAssignmentRead)
+async def assign_task(data: TaskAssignmentCreate,
                       session: Session = Depends(get_session)):
     repo = TaskAssignmentRepository(session)
     service = TaskAssignmentService(repo)
-    return service.create_task_assignment(user_id, task_id)
+    return service.create_task_assignment(data)
 
 
-@router.get("/get-all-assigned-tasks/")
+@router.get("/get-task-assignments/", response_model=list[TaskAssignmentRead])
+async def get_all_users_user_id(
+        user_id, session: Session = Depends(get_session)):
+    repo = TaskAssignmentRepository(session)
+    service = TaskAssignmentService(repo)
+    return service.get_task_assignments_by_user_id(user_id)
+
+
+@router.get("/get-task-assignments/", response_model=list[TaskAssignmentRead])
+async def get_all_users_task_id(
+        task_id, session: Session = Depends(get_session)):
+    repo = TaskAssignmentRepository(session)
+    service = TaskAssignmentService(repo)
+    return service.get_task_assignment_(task_id)
+
+
+@router.get("/get-all-assigned-tasks/",
+            response_model=list[TaskAssignmentRead])
 async def get_all_assigned_tasks(session: Session = Depends(get_session)):
     repo = TaskAssignmentRepository(session)
     service = TaskAssignmentService(repo)

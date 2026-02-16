@@ -25,3 +25,6 @@ class TimeLogService:
         except Exception:
             # Let unexpected errors bubble up as 500s
             raise
+
+    def get_all_time_logs(self):
+        return self.repo.get_all_time_logs()

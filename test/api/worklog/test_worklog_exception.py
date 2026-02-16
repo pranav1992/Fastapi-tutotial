@@ -35,9 +35,14 @@ def test_worklog_already_exists_exception(monkeypatch):
 
     client = TestClient(app)
     resp = client.post(
-        "/worklogs/",
-        json={"user_id": "11111111-1111-1111-1111-111111111111",
-              "task_id": "22222222-2222-2222-2222-222222222222"},
+        "/worklogs/create-worklog/",
+        json={
+            "user_id": "11111111-1111-1111-1111-111111111111",
+            "task_id": "22222222-2222-2222-2222-222222222222",
+            "task_assignment_id": "22222222-2222-2222-2222-222222222222",
+            "year": 2024,
+            "month": 12,
+        },
     )
 
     assert resp.status_code == 409

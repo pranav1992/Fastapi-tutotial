@@ -5,49 +5,59 @@ from sqlalchemy.exc import IntegrityError
 
 from app.application.services.task_assignment_service\
                                             import TaskAssignmentService
+from app.domain.schema import TaskAssignmentCreate
 from app.domain.exceptions import InvalidTaskAssignment, TaskAlreadyAssigned
 
 
 def test_create_task_assignment_success():
     repo = Mock()
-    repo.task_assignment_to_user.return_value = "assignment"
+    repo.create_task_assignment_to_user.return_value = "assignment"
     service = TaskAssignmentService(repo)
 
-    result = service.create_task_assignment("user-id", "task-id")
+    payload = TaskAssignmentCreate(
+        user_id="11111111-1111-1111-1111-111111111111",
+        task_id="22222222-2222-2222-2222-222222222222",
+    )
+    result = service.create_task_assignment(payload)
 
     assert result == "assignment"
-    repo.task_assignment_to_user.assert_called_once_with("user-id", "task-id")
+    repo.create_task_assignment_to_user.assert_called_once_with(payload)
 
 
 def test_create_task_assignment_missing_user():
     repo = Mock()
     service = TaskAssignmentService(repo)
 
-    with pytest.raises(InvalidTaskAssignment):
-        service.create_task_assignment("", "task-id")
+    with pytest.raises(Exception):  # ValidationError from Pydantic
+        TaskAssignmentCreate(user_id=None, task_id="22222222-2222-2222-2222-222222222222")
 
-    repo.task_assignment_to_user.assert_not_called()
+    repo.create_task_assignment_to_user.assert_not_called()
 
 
 def test_create_task_assignment_missing_task():
     repo = Mock()
     service = TaskAssignmentService(repo)
 
-    with pytest.raises(InvalidTaskAssignment):
-        service.create_task_assignment("user-id", None)
+    with pytest.raises(Exception):  # ValidationError from Pydantic
+        TaskAssignmentCreate(user_id="11111111-1111-1111-1111-111111111111", task_id=None)
 
-    repo.task_assignment_to_user.assert_not_called()
+    repo.create_task_assignment_to_user.assert_not_called()
 
 
 def test_create_task_assignment_duplicate():
     repo = Mock()
     repo.session = Mock()
-    repo.task_assignment_to_user.side_effect = IntegrityError(None, None, None)
+    repo.create_task_assignment_to_user.side_effect = IntegrityError(
+        None, None, None)
     service = TaskAssignmentService(repo)
 
+    payload = TaskAssignmentCreate(
+        user_id="11111111-1111-1111-1111-111111111111",
+        task_id="22222222-2222-2222-2222-222222222222",
+    )
     with pytest.raises(TaskAlreadyAssigned):
-        service.create_task_assignment("user-id", "task-id")
+        service.create_task_assignment(payload)
 
     repo.session.rollback.assert_called_once()
 
-    repo.task_assignment_to_user.assert_called_once_with("user-id", "task-id")
+    repo.create_task_assignment_to_user.assert_called_once()

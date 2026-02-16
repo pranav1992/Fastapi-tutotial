@@ -2,44 +2,46 @@ from uuid import UUID
 from typing import Union
 from ..models import TaskAssignment
 from sqlmodel import select
+from app.domain.schema import TaskAssignmentCreate
 
 
 class TaskAssignmentRepository:
     def __init__(self, session):
         self.session = session
 
-    def task_assignment_to_user(self, user_id: Union[UUID, str],
-                                task_id: Union[UUID, str]):
-        # Accept string UUIDs from callers and normalise to UUID
-        # objects for SQLModel
-        user_uuid = UUID(str(user_id))
-        task_uuid = UUID(str(task_id))
-
-        orm = TaskAssignment(user_id=user_uuid, task_id=task_uuid)
+    def create_task_assignment_to_user(self, data: TaskAssignmentCreate):
+        orm = TaskAssignment(user_id=data.user_id, task_id=data.task_id)
         self.session.add(orm)
         self.session.commit()
         self.session.refresh(orm)
         return orm
 
-    def get_assigned_tasks(self, assigned_task_id: Union[UUID, str]):
+    def get_tasks_assigned_by_task_assignment_id(
+            self, task_assignment_id: Union[UUID, str]):
         return self.session.exec(
-            select(TaskAssignment).where(TaskAssignment.id == assigned_task_id)
+            select(TaskAssignment).where(
+                TaskAssignment.id == task_assignment_id)
         ).first()
 
-    def get_assignment_for_user_task(
-        self, user_id: Union[UUID, str], task_id: Union[UUID, str],
-        active_only: bool = True
-    ):
-        """Fetch a task assignment for a given user and task."""
-        conditions = [
-            TaskAssignment.user_id == user_id,
-            TaskAssignment.task_id == task_id,
-        ]
-        if active_only:
-            conditions.append(TaskAssignment.active.is_(True))
+    def ensure_task_assigned(
+            self, user_id: Union[UUID, str], task_id: Union[UUID, str]):
+        return self.session.exec(
+            select(TaskAssignment).where(
+                TaskAssignment.user_id == user_id,
+                TaskAssignment.task_id == task_id)
+        ).first()
 
-        return self.session.exec(select(TaskAssignment).
-                                 where(*conditions)).first()
+    def get_tasks_assigned_by_user_id(self, user_id: Union[UUID, str]):
+        return self.session.exec(
+            select(TaskAssignment).where(
+                TaskAssignment.user_id == user_id)
+        ).all()
 
-    def get_all_task_assignments(self):
+    def get_tasks_assigned_by_task_id(self, task_id: Union[UUID, str]):
+        return self.session.exec(
+            select(TaskAssignment).where(
+                TaskAssignment.task_id == task_id)
+        ).all()
+
+    def get_all_tasks_assigned(self):
         return self.session.exec(select(TaskAssignment)).all()

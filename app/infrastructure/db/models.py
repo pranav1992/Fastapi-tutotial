@@ -75,9 +75,10 @@ class WorkLog(SQLModel, table=True):
 
     user_id: UUID = Field(foreign_key="user.id")
     task_id: UUID = Field(foreign_key="task.id")
+    task_assignment_id: UUID = Field(foreign_key="taskassignment.id")
 
     year: int
-    month: int  
+    month: int
 
     created_at: date = Field(default_factory=date.today)
     active: bool = True
@@ -87,8 +88,10 @@ class TimeLog(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     # Link to the task assignment; SQLModel expects a string foreign_key
     # target, not a column object.
-    task_id: UUID = Field(foreign_key="taskassignment.id")
+    task_id: UUID = Field(foreign_key="task.id")
     user_id: UUID = Field(foreign_key="user.id")
+    task_assignment_id: UUID = Field(foreign_key="taskassignment.id")
+    worklog_id: UUID = Field(foreign_key="worklog.id")
     created_at: Optional[date] = Field(default_factory=date.today)
     start_time: datetime
     end_time: datetime

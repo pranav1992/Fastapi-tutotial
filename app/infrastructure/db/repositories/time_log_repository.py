@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from app.domain.schema import TimeLogCreate
 from app.infrastructure.db.models import TimeLog
+from sqlmodel import select
 
 
 class TimeLogRepository:
@@ -19,6 +20,8 @@ class TimeLogRepository:
         orm = TimeLog(
             task_id=time_log.task_id,
             user_id=time_log.user_id,
+            task_assignment_id=time_log.task_assignment_id,
+            worklog_id=time_log.worklog_id,
             start_time=time_log.start_time,
             end_time=time_log.end_time,
             total_time=duration,
@@ -27,3 +30,10 @@ class TimeLogRepository:
         self.session.commit()
         self.session.refresh(orm)
         return orm
+
+    def get_all_time_logs(self):
+        return self.session.exec(select(TimeLog)).all()
+
+    def get_time_log_by_id(self, id: str):
+        return self.session.exec(select(TimeLog).
+                                 where(TimeLog.id == id)).first()
