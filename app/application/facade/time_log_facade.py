@@ -3,7 +3,7 @@ from app.application.services.task_assignment_service import\
 from app.application.services.time_log_service import TimeLogService
 from app.application.services.worklog_service import WorkLogService
 from app.domain.exceptions import TaskNotFound, WorkLogNotFound
-from app.domain.schema import TimeLogCreate
+from app.domain.schema import TimeLogCreate, WorkLogQuery
 
 
 class TimeLogFacade:
@@ -20,15 +20,22 @@ class TimeLogFacade:
         self.worklog_service = worklog_service
         self.session = session
 
-    def check_task_assignment(self, user_id, task_id):
-        assignment = self.assignment_service.ensure_active(user_id, task_id)
+    def check_task_assignment(self, task_assignment_id):
+        assignment = self.assignment_service.get_task_assignment_by_id(
+            task_assignment_id)
         if not assignment:
-            raise TaskNotFound(task_id)
+            raise TaskNotFound(task_assignment_id)
         return assignment
 
-    def check_worklog(self, user_id, task_id, year, month):
-        worklog = self.worklog_service.get_worklog_for_month(
-            user_id, task_id, year, month
+    def check_worklog(self, data: TimeLogCreate):
+        worklog = self.worklog_service.ensure_worklog_exists(
+            WorkLogQuery(
+                user_id=data.user_id,
+                task_id=data.task_id,
+                task_assignment_id=data.task_assignment_id,
+                year=data.start_time.year,
+                month=data.start_time.month
+            )
         )
         if not worklog:
             raise WorkLogNotFound("Worklog not found")
@@ -36,22 +43,14 @@ class TimeLogFacade:
 
     def create_timelog(self, data: TimeLogCreate):
         try:
-            print(data)
-
-            # assignment = self.check_task_assignment(
-            # data.user_id, data.task_id)
-            # if not assignment:
-            #     return None
-            # worklog = self.check_worklog(
-            #     data.user_id, data.task_id, data.year, data.month
-            # )
-            # if not worklog:
-            #     # create a worklog
-            #     self.worklog_service.create_worklog(
-            #         data.user_id, data.task_id, data.created_at)
-            timelog = self.timelog_service.create_time_log(data)
+            assignment = self.check_task_assignment(data.task_assignment_id)
+            if not assignment:
+                return None
+            worklog = self.check_worklog(data)
+            if not worklog:
+                return None
+            timelog = self.timelog_service.create_time_log(data, worklog.id)
             return timelog
-
         except Exception:
             self.session.rollback()
             raise

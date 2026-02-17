@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, field_validator
 from datetime import datetime, date, timedelta
 from typing import Optional, Union
+from decimal import Decimal
 from uuid import UUID, uuid4
 
 
@@ -101,11 +102,11 @@ class TimeLogCreate(BaseModel):
     task_id: Union[UUID, str]
     user_id: Union[UUID, str]
     task_assignment_id: Union[UUID, str]
-    worklog_id: Union[UUID, str]
     start_time: datetime
     end_time: datetime
 
-    @field_validator("task_id", "user_id", "task_assignment_id", "worklog_id", mode="before")
+    # Validate only the fields actually declared on the model
+    @field_validator("task_id", "user_id", "task_assignment_id", mode="before")
     @classmethod
     def ensure_uuid(cls, value):
         if isinstance(value, UUID):
@@ -120,6 +121,7 @@ class TimeLogRead(BaseModel):
     task_id: UUID
     user_id: UUID
     task_assignment_id: UUID
+    worklog_id: UUID
     created_at: date
     start_time: datetime
     end_time: datetime
@@ -130,3 +132,34 @@ class TimeLogRead(BaseModel):
         json_encoders = {
             timedelta: lambda td: int(td.total_seconds())
         }
+
+
+class RemittancePayRequest(BaseModel):
+    user_id: Union[UUID, str]
+    year: int
+    month: int
+    rate_per_hour: Decimal
+
+    @field_validator("user_id", mode="before")
+    @classmethod
+    def ensure_user_uuid(cls, value):
+        if isinstance(value, UUID):
+            return value
+        if isinstance(value, str):
+            return UUID(value)
+        raise TypeError("user_id must be UUID or UUID string")
+
+
+class RemittanceRead(BaseModel):
+    id: UUID
+    user_id: UUID
+    total_hours: float
+    payable_hours: float
+    rate_per_hour: Decimal
+    total_amount: Decimal
+    settled_month_and_year: date
+    status: str
+    created_at: date
+
+    class Config:
+        orm_mode = True

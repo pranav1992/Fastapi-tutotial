@@ -31,3 +31,6 @@ class WorkLogService:
 
     def get_worklog_by_task_id(self, task_id):
         return self.repo.get_worklog_by_task_id(task_id)
+    
+    def ensure_worklog_exists(self, worklog: WorkLogQuery):
+        return self.repo.ensure_worklog_exists(worklog)

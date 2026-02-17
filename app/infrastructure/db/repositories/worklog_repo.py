@@ -44,10 +44,10 @@ class WorkLogRepository:
         ).first()
 
     def ensure_worklog_exists(self, worklog: WorkLogQuery):
-        worklog = self.get_worklog(worklog)
-        if not worklog:
+        isExist = self.get_worklog(worklog)
+        if not isExist:
             worklog = self.create_worklog(WorkLogCreate(
-                user_id=worklog.user_id, task_id=worklog.task_id, 
+                user_id=worklog.user_id, task_id=worklog.task_id,
                 year=worklog.year, month=worklog.month,
                 task_assignment_id=worklog.task_assignment_id))
         return worklog

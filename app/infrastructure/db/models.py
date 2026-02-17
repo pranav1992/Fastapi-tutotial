@@ -50,15 +50,6 @@ class TaskAssignment(SQLModel, table=True):
     active: bool = True
     expires_at: Optional[date] = Field(default=None)
 
-# class WorkLog(SQLModel, table=True):
-#     id: UUID = Field(default_factory=uuid4, primary_key=True)
-#     user_id: UUID = Field(foreign_key="user.id")
-#     task_id: UUID = Field(foreign_key="task.id")
-#     created_at: date = Field(default_factory=date.today)
-#     start_time: datetime
-#     end_time: datetime | None = None
-#     active: bool = True
-
 
 class WorkLog(SQLModel, table=True):
     __table_args__ = (
@@ -76,6 +67,12 @@ class WorkLog(SQLModel, table=True):
     user_id: UUID = Field(foreign_key="user.id")
     task_id: UUID = Field(foreign_key="task.id")
     task_assignment_id: UUID = Field(foreign_key="taskassignment.id")
+    # Optional link to the remittance that paid out this worklog
+    remittance_id: Optional[UUID] = Field(
+        default=None,
+        foreign_key="remittance.id",
+        nullable=True,
+    )
 
     year: int
     month: int
@@ -86,8 +83,6 @@ class WorkLog(SQLModel, table=True):
 
 class TimeLog(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    # Link to the task assignment; SQLModel expects a string foreign_key
-    # target, not a column object.
     task_id: UUID = Field(foreign_key="task.id")
     user_id: UUID = Field(foreign_key="user.id")
     task_assignment_id: UUID = Field(foreign_key="taskassignment.id")
@@ -142,7 +137,8 @@ class TimeLog(SQLModel, table=True):
 class Adjustment(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
 
-    settlement_id: UUID = Field(foreign_key="worksettlement.id")
+    # Link adjustments directly to a remittance (work settlement record)
+    remittance_id: UUID = Field(foreign_key="remittance.id")
 
     adjustment_type: AdjustmentType  # INCREASE / DECREASE
 
@@ -156,12 +152,12 @@ class Adjustment(SQLModel, table=True):
 
     created_at: date = Field(default_factory=date.today)
 
-    @field_validator("settlement_id")
+    @field_validator("remittance_id")
     @classmethod
-    def validate_settlement_id(cls, settlement_id, info):
-        if not settlement_id:
-            raise ValueError("settlement_id is required")
-        return settlement_id
+    def validate_remittance_id(cls, remittance_id, info):
+        if not remittance_id:
+            raise ValueError("remittance_id is required")
+        return remittance_id
 
     @field_validator("amount")
     @classmethod
@@ -178,35 +174,6 @@ class Adjustment(SQLModel, table=True):
         return reason
 
 
-class WorkSettlement(SQLModel, table=True):
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
-
-    worklog_id: UUID = Field(foreign_key="worklog.id")
-
-    total_hours: float
-    payable_hours: float
-    rate_per_hour: Decimal
-
-    gross_amount: Decimal
-
-    settled_month: date
-    status: str  # PENDING / APPROVED / PAID
-
-    created_at: date = Field(default_factory=date.today)
-
-
-class WorkPayment(SQLModel, table=True):
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
-
-    settlement_id: UUID = Field(foreign_key="worksettlement.id")
-
-    paid_hours: float
-    paid_amount: Decimal
-
-    paid_at: datetime
-    reference_id: str
-
-
 class RemittanceStatus(str, Enum):
     PENDING = "PENDING"
     REMITTED = "REMITTED"
@@ -217,18 +184,62 @@ class RemittanceStatus(str, Enum):
 class Remittance(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     user_id: UUID = Field(foreign_key="user.id")
-    period_start: datetime
-    period_end: datetime
+    total_hours: float
+    payable_hours: float
+    rate_per_hour: Decimal
     total_amount: Decimal = Field(default=0, max_digits=5, decimal_places=2)
-    status: RemittanceStatus
+    settled_month_and_year: date
+    status: RemittanceStatus = Field(default=RemittanceStatus.PENDING)
     created_at: date = Field(default_factory=date.today)
 
+    @field_validator("total_hours", "payable_hours")
+    @classmethod
+    def validate_hours_positive(cls, value, info):
+        if value is None or value < 0:
+            raise ValueError(f"{info.field_name} must be a non-negative number")
+        return value
 
-class RemittanceLine(SQLModel, table=True):
+    @field_validator("rate_per_hour")
+    @classmethod
+    def validate_rate_positive(cls, value):
+        if value is None or value <= 0:
+            raise ValueError("rate_per_hour must be greater than zero")
+        return value
+
+    @model_validator(mode="after")
+    def set_total_amount(self):
+        # Calculate payable amount if not set or zero
+        if (self.total_amount is None) or (self.total_amount == 0):
+            self.total_amount = (Decimal(self.payable_hours)
+                                 * Decimal(self.rate_per_hour))
+        # payable_hours should not exceed total_hours
+        if self.payable_hours > self.total_hours:
+            raise ValueError("payable_hours cannot exceed total_hours")
+        return self
+
+
+class RemittanceLine(SQLModel, table=True):  # Payment
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     remittance_id: UUID = Field(foreign_key="remittance.id")
-    worklog_id: UUID = Field(foreign_key="timelog.id")
-    amount: Decimal
+    worklog_id: UUID = Field(foreign_key="worklog.id")
+    paid_hours: float
+    paid_amount: Decimal
+    paid_at: datetime = Field(default_factory=datetime.utcnow)
+    reference_id: str = Field(default=None)
+
+    @field_validator("paid_hours")
+    @classmethod
+    def validate_paid_hours(cls, value):
+        if value is None or value <= 0:
+            raise ValueError("paid_hours must be greater than zero")
+        return value
+
+    @field_validator("paid_amount")
+    @classmethod
+    def validate_paid_amount(cls, value):
+        if value is None or value <= 0:
+            raise ValueError("paid_amount must be greater than zero")
+        return value
 
 
 class User(SQLModel, table=True):

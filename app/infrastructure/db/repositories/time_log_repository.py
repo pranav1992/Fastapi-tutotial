@@ -9,7 +9,7 @@ class TimeLogRepository:
     def __init__(self, session):
         self.session = session
 
-    def create_time_log(self, time_log: TimeLogCreate):
+    def create_time_log(self, time_log: TimeLogCreate, worklog_id):
         # Compute and validate duration before persisting
         duration = time_log.end_time - time_log.start_time
         if duration <= timedelta(0):
@@ -21,7 +21,7 @@ class TimeLogRepository:
             task_id=time_log.task_id,
             user_id=time_log.user_id,
             task_assignment_id=time_log.task_assignment_id,
-            worklog_id=time_log.worklog_id,
+            worklog_id=worklog_id,
             start_time=time_log.start_time,
             end_time=time_log.end_time,
             total_time=duration,
