@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from decimal import Decimal
-from typing import List
+from typing import List, Tuple
 
 from sqlmodel import select
 
@@ -17,12 +17,17 @@ class RemittanceRepository:
     def __init__(self, session):
         self.session = session
 
+    def list_all_remittances(self):
+        return self.session.exec(select(Remittance)).all()
+
     # Public API
-    def pay_month(self, user_id, year: int, month: int, rate_per_hour: Decimal):
+    def pay_month(
+            self, user_id, year: int, month: int, rate_per_hour: Decimal):
         """
-        Aggregate all worklogs + timelogs for a user/month, create a remittance,
-        generate payment lines per worklog, and mark worklogs as paid.
-        Idempotent: if a REMITTED record already exists for that month, return it.
+        Aggregate all worklogs + timelogs for a user/month, create a
+        remittance, generate payment lines per worklog, and mark worklogs
+        as paid. Idempotent: if a REMITTED record already exists for that
+        month, return it.
         """
         month_anchor = date(year, month, 1)
 
@@ -43,7 +48,8 @@ class RemittanceRepository:
         hours_per_worklog = self._accumulate_hours_by_worklog(timelogs)
         total_hours = sum(hours_per_worklog.values())
         if total_hours <= 0:
-            raise ValueError("Total hours must be positive to create remittance")
+            raise ValueError(
+                "Total hours must be positive to create remittance")
 
         payable_hours = total_hours  # Placeholder for future adjustments
         total_amount = (Decimal(payable_hours) * Decimal(rate_per_hour))
@@ -80,7 +86,7 @@ class RemittanceRepository:
                 worklog_id=wl_id,
                 paid_hours=hours,
                 paid_amount=paid_amount,
-                paid_at=datetime.utcnow(),
+                paid_at=datetime.now(),
             )
             self.session.add(line)
 
@@ -88,6 +94,32 @@ class RemittanceRepository:
         self.session.commit()
         self.session.refresh(remittance)
         return remittance
+
+    def calculate_month(self, user_id, year: int, month: int,
+                        rate_per_hour: Decimal) -> Tuple[
+                            float, float, Decimal, dict]:
+        """
+        Pure calculation: no DB writes. Returns (total_hours, payable_hours,
+        total_amount, breakdown_by_worklog).
+        """
+        worklogs = self._get_worklogs(user_id, year, month)
+        if not worklogs:
+            raise ValueError("No worklogs found for this user and month")
+
+        timelogs = self._get_timelogs([w.id for w in worklogs])
+        if not timelogs:
+            raise ValueError("No timelogs found for this user and month")
+
+        hours_per_worklog = self._accumulate_hours_by_worklog(timelogs)
+        total_hours = sum(hours_per_worklog.values())
+        if total_hours <= 0:
+            raise ValueError(
+                "Total hours must be positive to calculate remittance")
+
+        payable_hours = total_hours  # adjust later for caps/adjustments
+        total_amount = Decimal(payable_hours) * Decimal(rate_per_hour)
+
+        return total_hours, payable_hours, total_amount, hours_per_worklog
 
     # Helpers
     def _get_remittance(self, user_id, month_anchor: date):

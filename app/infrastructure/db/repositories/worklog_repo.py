@@ -64,3 +64,6 @@ class WorkLogRepository:
 
     def get_all_worklogs(self):
         return self.session.exec(select(WorkLog)).all()
+
+    def list_worklogs_with_remittance_status(self):
+        return self.session.exec(select(WorkLog)).all()

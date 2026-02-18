@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, field_validator
 from datetime import datetime, date, timedelta
-from typing import Optional, Union
+from typing import Optional, Union, List
 from decimal import Decimal
 from uuid import UUID, uuid4
 
@@ -86,7 +86,8 @@ class WorkLogQuery(BaseModel):
     year: int
     month: int
 
-    @field_validator("user_id", "task_id", "task_assignment_id", "id", mode="before")
+    @field_validator(
+            "user_id", "task_id", "task_assignment_id", "id", mode="before")
     @classmethod
     def ensure_uuid(cls, value):
         if value is None:
@@ -160,6 +161,50 @@ class RemittanceRead(BaseModel):
     settled_month_and_year: date
     status: str
     created_at: date
+
+    class Config:
+        orm_mode = True
+
+
+class RemittanceBulkPayRequest(BaseModel):
+    year: int
+    month: int
+    rate_per_hour: Decimal
+
+
+class RemittanceBulkPayResponse(BaseModel):
+    remittances: List[RemittanceRead]
+    errors: dict[str, str] = Field(default_factory=dict)
+
+
+class RemittanceWorklogBreakdown(BaseModel):
+    worklog_id: UUID
+    hours: float
+    amount: Decimal
+
+
+class RemittancePreview(BaseModel):
+    user_id: UUID
+    year: int
+    month: int
+    total_hours: float
+    payable_hours: float
+    rate_per_hour: Decimal
+    total_amount: Decimal
+    breakdown: List[RemittanceWorklogBreakdown]
+
+
+class WorkLogAmountRead(BaseModel):
+    id: UUID
+    user_id: UUID
+    task_id: UUID
+    task_assignment_id: UUID
+    year: int
+    month: int
+    created_at: date
+    remittance_status: str
+    total_hours: float
+    amount: Decimal
 
     class Config:
         orm_mode = True

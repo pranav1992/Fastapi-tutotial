@@ -196,7 +196,8 @@ class Remittance(SQLModel, table=True):
     @classmethod
     def validate_hours_positive(cls, value, info):
         if value is None or value < 0:
-            raise ValueError(f"{info.field_name} must be a non-negative number")
+            raise ValueError(
+                f"{info.field_name} must be a non-negative number")
         return value
 
     @field_validator("rate_per_hour")
